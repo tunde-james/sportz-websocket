@@ -37,7 +37,6 @@ matchRouter.get('/', async (req, res) => {
     console.error('Failed to list matches:', error);
     res.status(500).json({
       error: 'Failed to list matches.',
-      details: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -74,7 +73,6 @@ matchRouter.post('/', async (req, res) => {
     console.error('Failed to create match:', error);
     res.status(500).json({
       error: 'Failed to create match.',
-      details: error instanceof Error ? error.message : String(error),
     });
   }
 });
