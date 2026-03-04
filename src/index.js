@@ -1,10 +1,21 @@
 import express from 'express';
+import http from 'node:http';
+
 import { matchRouter } from './routes/matches.js';
+import { attachWebSocketServer } from './ws/server.js';
 
 const app = express();
-const PORT = 8000;
+
+const rawPort = process.env.PORT ?? '8000';
+const PORT = Number.parseInt(rawPort, 10);
+if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) {
+  throw new Error(`Invalid PORT value: ${rawPort}`);
+}
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json());
+
+const server = http.createServer(app);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Server is up and running.' });
@@ -12,6 +23,15 @@ app.get('/', (req, res) => {
 
 app.use('/matches', matchRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+const { broadcastMatchCreated } = attachWebSocketServer(server);
+app.locals.broadcastMatchCreated = broadcastMatchCreated;
+
+server.listen(PORT, HOST, () => {
+  const baseUrl =
+    HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
+
+  console.log(`Server is running on  ${baseUrl}`);
+  console.log(
+    `WebSocket Server is running on  ${baseUrl.replace('http', 'ws')}/ws`,
+  );
 });
