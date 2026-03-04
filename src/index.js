@@ -1,9 +1,10 @@
 import express from 'express';
 import http from 'node:http';
 
-import { matchRouter } from './routes/matches.js';
+import { matchRouter } from './routes/matches.routes.js';
 import { attachWebSocketServer } from './ws/server.js';
 import { securityMiddleware } from './arcjet.js';
+import { commentaryRouter } from './routes/commentary.routes.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ if (!Number.isInteger(PORT) || PORT < 0 || PORT > 65535) {
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json());
+app.use(securityMiddleware());
 
 const server = http.createServer(app);
 
@@ -22,9 +24,8 @@ app.get('/', (req, res) => {
   res.json({ message: 'Server is up and running.' });
 });
 
-app.use(securityMiddleware())
-
 app.use('/matches', matchRouter);
+app.use('/matches/:id/commentary', commentaryRouter);
 
 const { broadcastMatchCreated } = attachWebSocketServer(server);
 app.locals.broadcastMatchCreated = broadcastMatchCreated;
